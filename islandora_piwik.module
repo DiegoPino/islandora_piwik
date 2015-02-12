@@ -57,7 +57,7 @@ function islandora_piwik_admin_settings() {
  * Implements hook_islandora_view_object_alter().
  */
 function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
-  $timeout = variable_get('islandora_piwik_timeout', '2');
+  $timeout = (int) variable_get('islandora_piwik_timeout', '2');
   $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
   $idsite = variable_get('islandora_piwik_site_id', '1');
 
