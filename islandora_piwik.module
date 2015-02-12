@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * @file
+ * The main Piwik module file.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function islandora_piwik_menu() {
+  $items = array();
+  $items['admin/islandora/tools/piwik'] = array(
+    'title' => 'Islandora Piwik',
+    'description' => 'Configure Islandora Piwik.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_piwik_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Admin settings form builder.
+ */
+function islandora_piwik_admin_settings() {
+  $form['islandora_piwik_endpoint'] = array(
+    '#title' => t("Piwik API endpoint"),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php'),
+    '#description' => t("Your Piwik instance's API endpoint"),
+    '#maxlength' => 255,
+  );
+  $form['islandora_piwik_site_id'] = array(
+    '#title' => t('Site ID'),
+    '#type' => 'textfield',
+    '#size' => 5,
+    '#default_value' => variable_get('islandora_piwik_site_id', '1'),
+    '#description' => t("The ID of the site to track"),
+    '#maxlength' => 5,
+  );
+  $form['islandora_piwik_timeout'] = array(
+    '#title' => t('Timeout'),
+    '#type' => 'textfield',
+    '#size' => 5,
+    '#default_value' => variable_get('islandora_piwik_timeout', '2'),
+    '#description' => t("Number of seconds to use as the timeout for requests to
+      the Piwki endpoint."),
+    '#maxlength' => 5,
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_islandora_view_object_alter().
+ */
+function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
+  $timeout = variable_get('islandora_piwik_timeout', '2');
+  $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
+  $idsite = variable_get('islandora_piwik_site_id', '1');
+
+  // Record the object-level page in Piwik.
+  global $base_url;
+  $current_path = $base_url . '/' . current_path();
+  $url = urlencode($current_path);
+  $referrer = urlencode($_SERVER['HTTP_REFERER']);
+  $query = '?idsite=' . $idsite . '&rec=1&url=' . $url . '&urlref=' . $referrer;
+  $uri = $endpoint . $query;
+  $return = drupal_http_request($uri, array('timeout' => $timeout));
+
+  $collections = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
+  for ($i = 0; $i < count($collections); ++$i) {
+    // @todo: Hit Piwiki HTTP API to record use of collection. We'll have to
+    // be clear that use of the collection is not the same as viewing the
+    // collection page (which we might want to record on its own).
+    // $collections[$i]['object']['value'], "Collection");
+  }
+}

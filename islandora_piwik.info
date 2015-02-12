@@ -1,0 +1,6 @@
+name = Islandora Piwik
+description = "Piwik integration for Islandora."
+package = Islandora Tools
+version = 7.x-1.4
+core = 7.x
+dependencies[] = islandora
