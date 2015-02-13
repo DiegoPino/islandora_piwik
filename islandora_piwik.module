@@ -64,17 +64,32 @@ function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
   // Record the object-level page in Piwik.
   global $base_url;
   $current_path = $base_url . '/' . current_path();
-  $url = urlencode($current_path);
-  $referrer = urlencode($_SERVER['HTTP_REFERER']);
-  $query = '?idsite=' . $idsite . '&rec=1&url=' . $url . '&urlref=' . $referrer;
+  $query = '?apiv=1&rec=1';
+  $query .= '&idsite=' . $idsite;
+  $query .= '&url=' . $current_path;
+  // We urldecode() the referrer because URLS produced by Islandora
+  // are usually encoded.
+  $query .= '&urlref=' . urlencode(urldecode($_SERVER['HTTP_REFERER']));
   $uri = $endpoint . $query;
   $return = drupal_http_request($uri, array('timeout' => $timeout));
 
   $collections = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
   for ($i = 0; $i < count($collections); ++$i) {
-    // @todo: Hit Piwiki HTTP API to record use of collection. We'll have to
-    // be clear that use of the collection is not the same as viewing the
-    // collection page (which we might want to record on its own).
-    // $collections[$i]['object']['value'], "Collection");
+    // Hit the Piwiki HTTP API to record use of object's collection(s). We don't
+    // want to count usage of the islandora:root collection, on collections
+    // it contains.
+    if ($collections[$i]['object']['value'] != 'islandora:root') {
+      $collection_url = $base_url . '/islandora/object/' . $collections[$i]['object']['value'];
+      $query = '?apiv=1&rec=1';
+      $query = '&idsite=' . $idsite;
+      $query .= '&url=' . $collection_url;
+      // Create the object that holds the custom Piwik variable tracking
+      // collection PID.
+      $cvar_object = new stdClass();
+      $cvar_object->{1} = array('collection_pid', $collections[$i]['object']['value']);
+      $query .= '&cvar=' . urlencode(json_encode($cvar_object));
+      $uri = $endpoint . $query;
+      $return = drupal_http_request($uri, array('timeout' => $timeout));
+    }
   }
 }
