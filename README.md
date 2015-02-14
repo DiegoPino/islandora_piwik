@@ -2,13 +2,13 @@
 
 ## Overview
 
-This utility module provides integration with the [Piwik Open Analytics Platform](http://piwik.org/).
+This utility module provides integration with the [Piwik Open Analytics Platform](http://piwik.org/) via the Piwik Tracking HTTP API. It does not embed Javascript in pages.
 
 This module tracks object usage and collection usage. Object usage is straight foward: each time a user views an object at /islandora/object/pid, the request for that URL is recorded by Piwik.
 
-Collection usage works differently. Each time an object is viewed, a "use" of its collection is recorded. If an object is a member of more than one collection, each collection gets a use. Collection usage is recorded using a custom Piwik variable and reports are available under the "Visitors" tab in the Piwiki Dashboard, broken down by collection PID.
+Collection usage works differently. Each time an object is viewed, a "use" of the collection it is a member of is recorded. If an object is a member of more than one collection, each collection gets a use. Collection usage is recorded using a custom Piwik variable and reports are available under the "Visitors" tab in the Piwiki Dashboard, broken down by collection PID.
 
-However, collections are also objects, so when the default collection object page is viewed, Piwik records a use of the collection as an object. Keep in mind that object usage and collection usage as describe in the previous paragraphs are not the same - object-level usage (including collections as objects) records how many times the object (or collection object) default display at /islandora/object/pid was viewed, whereas the collection usage records how many times objects in each collection were viewed.
+However, collections are also objects, so when the default collection object page is viewed, Piwik records a use of the collection as an object. Keep in mind that object usage and collection usage as describe in the previous paragraphs are not the same - object-level usage (including collections as objects) records how many times the object (or collection object) default display at /islandora/object/pid was viewed, whereas the collection usage records how many times objects in each collection were viewed. The two ways collections are counted are completely independent of each other. 
 
 ## Dependencies
 
