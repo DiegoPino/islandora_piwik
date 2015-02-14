@@ -61,7 +61,7 @@ function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
   $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
   $idsite = variable_get('islandora_piwik_site_id', '1');
 
-  // Record the object-level page in Piwik.
+  // Record usage of the object.
   global $base_url;
   $current_path = $base_url . '/' . current_path();
   $query = '?apiv=1&rec=1';
@@ -73,18 +73,18 @@ function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
   $uri = $endpoint . $query;
   $return = drupal_http_request($uri, array('timeout' => $timeout));
 
+  // Record usage of the object's collection(s).
   $collections = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
   for ($i = 0; $i < count($collections); ++$i) {
-    // Hit the Piwiki HTTP API to record use of object's collection(s). We don't
-    // want to count usage of the islandora:root collection, on collections
-    // it contains.
+    // We don't want to count usage of the islandora:root collection.
     if ($collections[$i]['object']['value'] != 'islandora:root') {
       $collection_url = $base_url . '/islandora/object/' . $collections[$i]['object']['value'];
       $query = '?apiv=1&rec=1';
-      $query = '&idsite=' . $idsite;
-      $query .= '&url=' . $collection_url;
-      // Create the object that holds the custom Piwik variable tracking
-      // collection PID.
+      $query .= '&idsite=' . $idsite;
+      // Create the JSON object that holds the custom Piwik variable that
+      // tracks the collection PID. We do not include the collection URL
+      // in our request to the Piwik API since doing so would double-count
+      // usage of the collection.
       $cvar_object = new stdClass();
       $cvar_object->{1} = array('collection_pid', $collections[$i]['object']['value']);
       $query .= '&cvar=' . urlencode(json_encode($cvar_object));
