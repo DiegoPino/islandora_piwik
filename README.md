@@ -25,7 +25,7 @@ Visit admin/islandora/tools/piwik to configure this module. There is no set up o
 
 ## Feature requests
 
-This module was written as part of a large migration to Islandora from another repository platform. It wasn't intended to be extensible or terribly flexible. So feel free to fork the Github repo and modify it to suit your needs. That said, if enough people +1 a featue identified in the issue queue or on the Islandora email lists, we can look at how we can develop the module further.
+This module was written as part of a large migration to Islandora from another repository platform. It wasn't intended to be extensible or terribly flexible. So feel free to fork the Github repo and modify it to suit your needs. That said, if enough people +1 a featue identified in the issue queue or on the Islandora email lists, we can look at how we can develop the module further. Some features the maintainer is considering adding are:
 
 * Integrate Piwik report widgets into the Islandora site.
 * Ability to use one Piwik site for multiple Islandora front ends, so that objects accessible in multiple front ends would have their usage aggregated in one place.
