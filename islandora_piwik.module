@@ -78,7 +78,6 @@ function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
   for ($i = 0; $i < count($collections); ++$i) {
     // We don't want to count usage of the islandora:root collection.
     if ($collections[$i]['object']['value'] != 'islandora:root') {
-      $collection_url = $base_url . '/islandora/object/' . $collections[$i]['object']['value'];
       $query = '?apiv=1&rec=1';
       $query .= '&idsite=' . $idsite;
       // Create the JSON object that holds the custom Piwik variable that
