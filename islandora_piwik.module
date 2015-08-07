@@ -92,3 +92,25 @@ function islandora_piwik_islandora_view_object_alter(&$object, &$rendered) {
     }
   }
 }
+
+/**
+ * Implements hook_islandora_solr_results_alter().
+ */
+function islandora_piwik_islandora_solr_object_result_alter(&$search_result, $query_processor) {
+  $timeout = (int) variable_get('islandora_piwik_timeout', '2');
+  $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
+  $idsite = variable_get('islandora_piwik_site_id', '1');
+
+  global $base_url;
+  $current_path = $base_url . '/' . current_path();
+  $query = '?apiv=1&rec=1';
+  $query .= '&idsite=' . $idsite;
+  $query .= '&url=' . $current_path;
+  $query .= '&search=' .  $query_processor->solrQuery;
+  // We urldecode() the referrer because URLS produced by Islandora
+  // are usually encoded.
+  $query .= '&urlref=' . urlencode(urldecode($_SERVER['HTTP_REFERER']));
+  $uri = $endpoint . $query;
+  $return = drupal_http_request($uri, array('timeout' => $timeout));
+}
+
