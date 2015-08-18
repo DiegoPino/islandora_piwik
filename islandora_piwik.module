@@ -93,7 +93,14 @@ function islandora_piwik_islandora_view_object($object) {
   // are usually encoded.
   $query .= '&urlref=' . urlencode(urldecode($_SERVER['HTTP_REFERER']));
   $uri = $endpoint . $query;
-  $return = drupal_http_request($uri, array('timeout' => $timeout));
+  try {
+    $return = drupal_http_request($uri, array('timeout' => $timeout));
+  }
+  catch (Exception $e) {
+    watchdog('islandora_piwik', "Error connecting to Piwik server at %ep:
+      %message", array("%ep" => $endpoint, "%message" => $e->getMessage()),
+      WATCHDOG_ERROR);
+  }
 
   // Record usage of the object's collection(s).
   if (variable_get('islandora_piwik_track_collection_usage', 1)) {
@@ -111,7 +118,14 @@ function islandora_piwik_islandora_view_object($object) {
         $cvar_object->{1} = array('collection_pid', $collection);
         $query .= '&cvar=' . urlencode(json_encode($cvar_object));
         $uri = $endpoint . $query;
-        $return = drupal_http_request($uri, array('timeout' => $timeout));
+        try {
+          $return = drupal_http_request($uri, array('timeout' => $timeout));
+        }
+        catch (Exception $e) {
+          watchdog('islandora_piwik', "Error connecting to Piwik server at %ep:
+            %message", array("%ep" => $endpoint, "%message" => $e->getMessage()),
+            WATCHDOG_ERROR);
+        }
       }
     }
   }
@@ -138,7 +152,14 @@ function islandora_piwik_islandora_solr_query_result($result) {
   }
   $query .= '&url=' . $current_path;
   $uri = $endpoint . $query;
-  $return = drupal_http_request($uri, array('timeout' => $timeout));
+  try {
+    $return = drupal_http_request($uri, array('timeout' => $timeout));
+  }
+  catch (Exception $e) {
+    watchdog('islandora_piwik', "Error connecting to Piwik server at %ep:
+      %message", array("%ep" => $endpoint, "%message" => $e->getMessage()),
+      WATCHDOG_ERROR);
+  }
 }
 
 /**
