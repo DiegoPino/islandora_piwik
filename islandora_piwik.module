@@ -38,8 +38,17 @@ function islandora_piwik_admin_settings() {
     '#type' => 'textfield',
     '#size' => 5,
     '#default_value' => variable_get('islandora_piwik_site_id', '1'),
-    '#description' => t("The ID of the site to track"),
+    '#description' => t("The Piwik site ID."),
     '#maxlength' => 5,
+  );
+  $form['islandora_piwik_collection_site_ids'] = array(
+    '#title' => t('Collection-specific site IDs'),
+    '#type' => 'textarea',
+    '#size' => 5,
+    '#default_value' => variable_get('islandora_piwik_collection_site_ids', ''),
+    '#description' => t("Piwik site IDs for specific collections, one entry per
+      row. Each row should be in PID, site ID format
+      (e.g., \"islandora:mycollection, 5\")"),
   );
   $form['islandora_piwik_timeout'] = array(
     '#title' => t('Timeout'),
@@ -71,13 +80,13 @@ function islandora_piwik_admin_settings() {
 function islandora_piwik_islandora_view_object($object) {
   $timeout = (int) variable_get('islandora_piwik_timeout', '2');
   $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
-  $idsite = variable_get('islandora_piwik_site_id', '1');
+  $site_id = islandora_piwik_get_site_id($object);
 
   // Record usage of the object.
   global $base_url;
   $current_path = $base_url . '/' . current_path();
   $query = '?apiv=1&rec=1';
-  $query .= '&idsite=' . $idsite;
+  $query .= '&idsite=' . $site_id;
   $query .= '&url=' . $current_path;
   // We urldecode() the referrer because URLS produced by Islandora
   // are usually encoded.
@@ -92,7 +101,7 @@ function islandora_piwik_islandora_view_object($object) {
       // We don't want to count usage of the islandora:root collection.
       if ($collections != 'islandora:root') {
         $query = '?apiv=1&rec=1';
-        $query .= '&idsite=' . $idsite;
+        $query .= '&idsite=' . $site_id;
         // Create the JSON object that holds the custom Piwik variable that
         // tracks the collection PID. We do not include the collection URL
         // in our request to the Piwik API since doing so would double-count
@@ -114,12 +123,12 @@ function islandora_piwik_islandora_view_object($object) {
 function islandora_piwik_islandora_solr_query_result($result) {
   $timeout = (int) variable_get('islandora_piwik_timeout', '2');
   $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
-  $idsite = variable_get('islandora_piwik_site_id', '1');
+  $site_id = variable_get('islandora_piwik_site_id', '1');
   global $base_url;
 
   $current_path = $base_url . '/' . current_path();
   $query = '?apiv=1&rec=1';
-  $query .= '&idsite=' . $idsite;
+  $query .= '&idsite=' . $site_id;
   $search_words = $result['responseHeader']['params']['q'];
   $search_words = urlencode($search_words);
   $query .= '&search=' . $search_words;
@@ -188,5 +197,46 @@ EOQ;
       }
     }
     return $collection_pids;
+  }
+}
+
+/**
+ * Returns the Piwik site ID to use for the current object.
+ *
+ * @param object $islandora_object
+ *   The Islandora object being inspected.
+ *
+ * @return string $site_id
+ *   The site ID to use.
+ */
+function islandora_piwik_get_site_id($islandora_object) {
+  $general_site_id = variable_get('islandora_piwik_site_id', '1');
+  $collection_site_ids_setting = variable_get('islandora_piwik_collection_site_ids', '');
+  // If there are no collection-specific site IDs, use the general one.
+  if (!strlen($collection_site_ids_setting)) {
+    return $general_site_id;
+  }
+  else {
+    $collection_ids = array();
+    $entries = preg_split('/\r\n|[\r\n]/', $collection_site_ids_setting);
+    foreach ($entries as &$entry) {
+      list($pid, $site_id) = explode(',', $entry);
+      $pid = trim($pid);
+      $collection_ids[$pid] = trim($site_id);
+    }
+  }
+
+  // Get the collection PIDs of the current object, and test whether
+  // any of them are registered to use a collection site ID. If the
+  // object is a member of multiple collections, use the first one
+  // encountered.
+  $in_collections = islandora_piwik_get_ancestor_collections($islandora_object);
+  foreach ($in_collections as $in_collection) {
+    if (array_key_exists($in_collection, $collection_ids)) {
+      return $collection_ids[$in_collection];
+    }
+    else {
+      return $general_site_id;
+    }
   }
 }
