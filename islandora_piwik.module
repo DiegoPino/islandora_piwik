@@ -50,6 +50,18 @@ function islandora_piwik_admin_settings() {
       the Piwki endpoint."),
     '#maxlength' => 5,
   );
+  $form['islandora_piwik_track_collection_usage'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Track collection usage'),
+    '#default_value' => variable_get('islandora_piwik_track_collection_usage', 1),
+    '#description' => t("Check this option if you want to track collection usage
+      in addtion to object usage. If enabled, each object's parent collections
+      are counted every time the object is viewed, and usage reports will be
+      available under \"Visitors > Custom Variables\" in your Piwik server.
+      High-traffic or large sites may want to disable this option to improve
+      performance."),
+  );
+
   return system_settings_form($form);
 }
 
@@ -74,21 +86,23 @@ function islandora_piwik_islandora_view_object($object) {
   $return = drupal_http_request($uri, array('timeout' => $timeout));
 
   // Record usage of the object's collection(s).
-  $collections = islandora_piwik_get_ancestor_collections($object);
-  foreach ($collections as $collection) {
-    // We don't want to count usage of the islandora:root collection.
-    if ($collections != 'islandora:root') {
-      $query = '?apiv=1&rec=1';
-      $query .= '&idsite=' . $idsite;
-      // Create the JSON object that holds the custom Piwik variable that
-      // tracks the collection PID. We do not include the collection URL
-      // in our request to the Piwik API since doing so would double-count
-      // usage of the collection.
-      $cvar_object = new stdClass();
-      $cvar_object->{1} = array('collection_pid', $collection);
-      $query .= '&cvar=' . urlencode(json_encode($cvar_object));
-      $uri = $endpoint . $query;
-      $return = drupal_http_request($uri, array('timeout' => $timeout));
+  if (variable_get('islandora_piwik_track_collection_usage', 1)) {
+    $collections = islandora_piwik_get_ancestor_collections($object);
+    foreach ($collections as $collection) {
+      // We don't want to count usage of the islandora:root collection.
+      if ($collections != 'islandora:root') {
+        $query = '?apiv=1&rec=1';
+        $query .= '&idsite=' . $idsite;
+        // Create the JSON object that holds the custom Piwik variable that
+        // tracks the collection PID. We do not include the collection URL
+        // in our request to the Piwik API since doing so would double-count
+        // usage of the collection.
+        $cvar_object = new stdClass();
+        $cvar_object->{1} = array('collection_pid', $collection);
+        $query .= '&cvar=' . urlencode(json_encode($cvar_object));
+        $uri = $endpoint . $query;
+        $return = drupal_http_request($uri, array('timeout' => $timeout));
+      }
     }
   }
   return array();
