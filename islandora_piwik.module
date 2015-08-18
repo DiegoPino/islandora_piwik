@@ -74,10 +74,10 @@ function islandora_piwik_islandora_view_object($object) {
   $return = drupal_http_request($uri, array('timeout' => $timeout));
 
   // Record usage of the object's collection(s).
-  $collections = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
-  for ($i = 0; $i < count($collections); ++$i) {
+  $collections = islandora_piwik_get_ancestor_collections($object);
+  foreach ($collections as $collection) {
     // We don't want to count usage of the islandora:root collection.
-    if ($collections[$i]['object']['value'] != 'islandora:root') {
+    if ($collections != 'islandora:root') {
       $query = '?apiv=1&rec=1';
       $query .= '&idsite=' . $idsite;
       // Create the JSON object that holds the custom Piwik variable that
@@ -85,13 +85,13 @@ function islandora_piwik_islandora_view_object($object) {
       // in our request to the Piwik API since doing so would double-count
       // usage of the collection.
       $cvar_object = new stdClass();
-      $cvar_object->{1} = array('collection_pid', $collections[$i]['object']['value']);
+      $cvar_object->{1} = array('collection_pid', $collection);
       $query .= '&cvar=' . urlencode(json_encode($cvar_object));
       $uri = $endpoint . $query;
       $return = drupal_http_request($uri, array('timeout' => $timeout));
     }
   }
-  return NULL;
+  return array();
 }
 
 /**
@@ -108,11 +108,71 @@ function islandora_piwik_islandora_solr_query_result($result) {
   $query .= '&idsite=' . $idsite;
   $search_words = $result['responseHeader']['params']['q'];
   $search_words = urlencode($search_words);
-  $query .= '&search=' .  $search_words;
+  $query .= '&search=' . $search_words;
   if ($result['response']['numFound'] === 0) {
     $query .= '&search_count=0';
   }
   $query .= '&url=' . $current_path;
   $uri = $endpoint . $query;
   $return = drupal_http_request($uri, array('timeout' => $timeout));
+}
+
+/**
+ * Returns the PIDs of all collections that the Islandora object belongs to.
+ *
+ * @param object $islandora_object
+ *   The Islandora object being inspected.
+ *
+ * @return array $collection_pids
+ *   A list of PIDS.
+ */
+function islandora_piwik_get_ancestor_collections($islandora_object) {
+  $collection_pids = array();
+  // islandora:is_member_of_collection property.
+  if ($islandora_object) {
+    $collections = $islandora_object->relationships->get(FEDORA_RELS_EXT_URI,
+      'isMemberOfCollection');
+    // The root collection PID will be a member of 0 collections, so we need
+    // to check for it.
+    if (count($collections) > 0) {
+      foreach ($collections as $collection) {
+        $collection_pids[] = $collection['object']['value'];
+      }
+    }
+    else {
+      // If the object is a book page or a newspaper issue, query the RI
+      // to get its ancestor collection.
+      $object_cmodel_pids = $islandora_object->models;
+      $pid = $islandora_object->id;
+      if ($object_cmodel_pids[0] == 'islandora:newspaperIssueCModel'
+        || $object_cmodel_pids[0] == 'islandora:pageCModel') {
+        $query = <<<EOQ
+          select ?collection from <#ri> where {
+            # Get the collection that book pages and newspaper issues belong to.
+            <info:fedora/$pid> <fedora-rels-ext:isMemberOf> ?parent .
+            ?parent <fedora-rels-ext:isMemberOfCollection> ?collection .
+          }
+EOQ;
+        $connection = islandora_get_tuque_connection();
+        $results = $connection->repository->ri->sparqlQuery($query, 1);
+        $collection_pids[] = $results[0]['collection']['value'];
+      }
+      // If the object is a newspaper page, query the RI to get the
+      // its ancestor collection.
+      if ($object_cmodel_pids[0] == 'islandora:newspaperPageCModel') {
+        $query = <<<EOQ
+          select ?collection from <#ri> where {
+            # Get the collection that newspaper pages belong to.
+            <info:fedora/$pid> <fedora-rels-ext:isMemberOf> ?issue .
+            ?issue <fedora-rels-ext:isMemberOf> ?newspaper .
+            ?newspaper <fedora-rels-ext:isMemberOfCollection> ?collection .
+          }
+EOQ;
+        $connection = islandora_get_tuque_connection();
+        $results = $connection->repository->ri->sparqlQuery($query, 1);
+        $collection_pids[] = $results[0]['collection']['value'];
+      }
+    }
+    return $collection_pids;
+  }
 }
