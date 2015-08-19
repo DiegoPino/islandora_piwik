@@ -20,7 +20,7 @@ Several Piwik report widgets (Real-time map, Visitor map, Islandora object pages
 
 This module allows administrators to associate a Piwik site ID with a specific collection PID. This feature allows the provision of Piwik accounts to people who "own" a collection. Collection and object page visits are recorded using only the collection-specific site ID, not both it and the general site ID. Currently, only collection and object page visits are recorded for collections using this feature; site searches are not. Multiple collections can be associated with the same site ID.
 
-If a collection is not associated with a site ID, page visits for it or its child collections use the general site ID.
+If a collection is not associated with a site ID, page visits for it or its child collections use the general site ID. Reports don't work for collection-specific site IDs, only the general site ID.
 
 ## Dependencies
 
@@ -39,8 +39,7 @@ Visit admin/islandora/tools/piwik to configure this module. There is no set up o
 
 This module was written as part of a large migration to Islandora from another repository platform. It wasn't intended to be extensible or terribly flexible. So feel free to fork the Github repo and modify it to suit your needs. That said, if enough people +1 a featue identified in the issue queue or on the Islandora email lists, we can look at how we can develop the module further. Some features the maintainer is considering adding are:
 
-* Integrate Piwik report widgets into the Islandora site.
-* Ability to use one Piwik site for multiple Islandora front ends, so that objects accessible in multiple front ends would have their usage aggregated in one place.
+* Ability to use one Piwik site for multiple Islandora front ends and multisite Drupal installs, so that objects accessible in multiple front ends would have their usage aggregated in one place.
 
 
 
