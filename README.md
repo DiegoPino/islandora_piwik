@@ -12,6 +12,10 @@ However, collections are also objects, so when the default collection object pag
 
 The module also tracks searches against Islandora using Islandora Solr Search, including searches that return zero results.
 
+## Reports
+
+Several Piwik report widgets (Real-time map, Visitor map, Islandora object pages, Islandora collection usage, Searches, and Searches returning no results) are available at admin/reports/islandora_piwik_reports to users who have been assigned the "View Islandora Piwik reports" permission. In order to enable these reports, you must enter your Piwik API key in the admin module's settings form. Data for these reports is from the last 24 hours.
+
 ## Collection-specific site IDs
 
 This module allows administrators to associate a Piwik site ID with a specific collection PID. This feature allows the provision of Piwik accounts to people who "own" a collection. Collection and object page visits are recorded using only the collection-specific site ID, not both it and the general site ID. Currently, only collection and object page visits are recorded for collections using this feature; site searches are not. Multiple collections can be associated with the same site ID.
