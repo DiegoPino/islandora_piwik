@@ -20,7 +20,7 @@ The contrib [Piwik Reports](https://www.drupal.org/project/piwik_reports) works 
 
 ## Collection-specific site IDs
 
-This module allows administrators to associate a Piwik site ID with a specific collection PID. This feature allows the provision of Piwik accounts to people who "own" a collection. Collection and object page visits are recorded using only the collection-specific site ID, not both it and the general site ID. Currently, only collection and object page visits are recorded for collections using this feature; site searches are not. Multiple collections can be associated with the same site ID.
+This module allows administrators to associate a collection PID with a Piwik site ID, allowing analytics to be broken out by collection. This feature is intended to allows site owners to view reports on their own collections, although the details of how to provide access to the relevant reports are [still in development](https://github.com/mjordan/islandora_piwik/issues/8). Collection and object page visits are recorded using only the collection-specific site ID, not both it and the general site ID. Currently, only collection and object page visits are recorded for collections using this feature; site searches are not. Multiple collections can be associated with the same site ID.
 
 If a collection is not associated with a site ID, page visits for it or its child collections use the general site ID. Reports don't work for collection-specific site IDs, only the general site ID.
 
