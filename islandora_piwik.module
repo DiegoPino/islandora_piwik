@@ -305,7 +305,7 @@ function islandora_piwik_reports() {
   $general_site_id = variable_get('islandora_piwik_site_id', '1');
   $token_auth = variable_get('islandora_piwik_api_key', '');
 
-  $foo = <<<FOO
+  $markup = <<<MARKUP
 <div>Data is from yesterday and today.</div>
 <h3>Real-time map</h3>
 <div id="widgetIframe"><iframe width="100%" height="350" src="$index_page?module=Widgetize&action=iframe&widget=1&moduleToWidgetize=UserCountryMap&actionToWidgetize=realtimeMap&idSite=$general_site_id&period=day&date=yesterday&disableLink=1&widget=1&token_auth=$token_auth" scrolling="no" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
@@ -324,6 +324,6 @@ function islandora_piwik_reports() {
 
 <h3>Searches returning no results</h3>
 <div id="widgetIframe"><iframe width="100%" height="350" src="$index_page?module=Widgetize&action=iframe&widget=1&moduleToWidgetize=Actions&actionToWidgetize=getSiteSearchNoResultKeywords&idSite=$general_site_id&period=day&date=yesterday&disableLink=1&widget=1&token_auth=$token_auth" scrolling="no" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
-FOO;
-  return $foo;
+MARKUP;
+  return $markup;
 }
