@@ -14,7 +14,7 @@ The module also tracks searches against Islandora using Islandora Solr Search, i
 
 ## Reports
 
-Several Piwik report widgets (Real-time map, Visitor map, Islandora object pages, Islandora collection usage, Searches, and Searches returning no results) are available at admin/reports/islandora_piwik_reports to users who have been assigned the "View Islandora Piwik reports" permission. In order to enable these reports, you must enter your Piwik API key in the admin module's settings form. Data for these reports is from the last 24 hours.
+Several Piwik report widgets (Real-time map, Visitor map, Islandora object pages, Islandora collection usage, Searches, and Searches returning no results) are available at admin/reports/islandora_piwik_reports to users who have been assigned the "View Islandora Piwik reports" permission. In order to enable these reports, you must enter your Piwik API key in the admin module's settings form. Data for these reports is from the current day.
 
 ## Collection-specific site IDs
 
