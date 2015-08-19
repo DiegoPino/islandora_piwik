@@ -37,9 +37,4 @@ Visit admin/islandora/tools/piwik to configure this module. There is no set up o
 
 ## Feature requests
 
-This module was written as part of a large migration to Islandora from another repository platform. It wasn't intended to be extensible or terribly flexible. So feel free to fork the Github repo and modify it to suit your needs. That said, if enough people +1 a featue identified in the issue queue or on the Islandora email lists, we can look at how we can develop the module further. Some features the maintainer is considering adding are:
-
-* Ability to use one Piwik site for multiple Islandora front ends and multisite Drupal installs, so that objects accessible in multiple front ends would have their usage aggregated in one place.
-
-
-
+This module was written as part of a large migration to Islandora from another repository platform that provided collection-level usage data (hence the focus on collections in this module). That said, I'd like to make the module as useful to as many implementers as possible. Given the rich functionality of the contrib [Piwik Web Analytics](https://www.drupal.org/project/piwik) module, the goal of this module is to add functionality specific to Islandora installations. While I am open to all feature requests from the community, don't be surprised if I preface my response to a request with "That isn't really in scope for this module....".
