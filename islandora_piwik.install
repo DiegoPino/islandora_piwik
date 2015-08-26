@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * This file contains all install related hooks.
+ */
+
+/**
+ * Implements hook_update().
+ *
+ * Adds a field to users to store the Piwik API key.
+ */
+function islandora_piwik_update_7000() {
+  field_cache_clear();
+  field_associate_fields('islandora_piwik');
+
+  $field_name = 'field_islandora_piwik_api_key';
+
+  // Create the field if it doesn't already exist.
+  if (!field_info_field($field_name)) {
+    $field = array(
+      'field_name' => $field_name,
+      'type' => 'text',
+    );
+    field_create_field($field);
+  }
+
+  // Attach an instance of the field to existing and new users.
+  if (!field_info_instance('user', $field_name, 'user')) {
+    $instance = array(
+      'field_name' => $field_name,
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Piwik API Key',
+      'description' => 'The Piwik API key for this user.',
+      'widget' => array(
+        'type' => 'textfield',
+      ),
+      'settings' => array(
+        'user_register_form' => 1,
+      ),
+    );
+    field_create_instance($instance);
+  }
+}
