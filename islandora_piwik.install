@@ -43,3 +43,14 @@ function islandora_piwik_update_7000() {
     field_create_instance($instance);
   }
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function islandora_piwik_uninstall() {
+  $field_name = 'field_islandora_piwik_api_key';
+  field_delete_field($field_name);
+  if ($instance = field_info_instance('user', $field_name, 'user')) {
+    field_delete_instance($instance);
+  }
+}
