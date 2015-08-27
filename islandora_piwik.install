@@ -6,11 +6,11 @@
  */
 
 /**
- * Implements hook_update().
+ * Implements hook_enable().
  *
  * Adds a field to users to store the Piwik API key.
  */
-function islandora_piwik_update_7000() {
+function islandora_piwik_enable() {
   field_cache_clear();
   field_associate_fields('islandora_piwik');
 
