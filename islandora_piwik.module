@@ -328,7 +328,7 @@ function islandora_piwik_page_alter(&$page) {
   dpm($page);
   global $_islandora_solr_queryclass;
   $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
-  $script.='jQuery(document).ready(function () {';
+  $script.='jQuery(document).ready(function () {var _paq = _paq || [];';
     //Asume this will be true for all Solr Searches
   if (!empty($_islandora_solr_queryclass)) {
       dpm($_islandora_solr_queryclass);
@@ -341,6 +341,7 @@ function islandora_piwik_page_alter(&$page) {
       //Check if we are using facets
       $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? : array();
       array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
+      dpm($keywordlist);
       $keywords = implode(' | ', $keywordlist);
       $script.="_paq.push(['trackSiteSearch',
       \"{$keywords}\",
