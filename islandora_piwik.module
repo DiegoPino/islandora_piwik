@@ -324,44 +324,43 @@ function islandora_piwik_get_site_id($islandora_object) {
 * Implements hook_page_alter().
 */
 function islandora_piwik_page_alter(&$page) {
-
   module_load_include('inc', 'islandora', 'includes/utilities');
   dpm($page);
   global $_islandora_solr_queryclass;
-  $general_site_id = variable_get('islandora_piwik_site_id', '1');
+  $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
   $script.='jQuery(document).ready(function () {';
     //Asume this will be true for all Solr Searches
-    if (!empty($_islandora_solr_queryclass)) {
+  if (!empty($_islandora_solr_queryclass)) {
       dpm($_islandora_solr_queryclass);
       // Means searching in a particular collection
       // DGI never validated cp? Can be anything!
       if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid('cp')) {
         $object = islandora_load_object($_islandora_solr_queryclass->internalSolrParams['cp']);
-        $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $siteId;
-        //Check if we are using facets
-        $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? : array();
-        array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
-        $keywords = implode(' | ', $keywordlist);
+        $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $general_site_id;
+      }
+      //Check if we are using facets
+      $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? : array();
+      array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
+      $keywords = implode(' | ', $keywordlist);
+      $script.="_paq.push(['trackSiteSearch',
+      \"{$keywords}\",
+      \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
+      {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
+      ])";
+      if ($siteId != $general_site_id) {
+        $script.="_paq.push(['setSiteId',$siteId]);";
         $script.="_paq.push(['trackSiteSearch',
         \"{$keywords}\",
         \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
         {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
         ])";
-        if ($siteId != $general_site_id) {
-          $script.="_paq.push(['setSiteId',$siteId]);";
-          $script.="_paq.push(['trackSiteSearch',
-          \"{$keywords}\",
-          \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
-          {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
-          ])";
-        }
       }
-    }
-    $script.='});';
-  if (arg(0) != 'islandora' && arg(1) != 'object' && isset($page['footer'])) {
-    $tracking_code = variable_get('islandora_piwik_javascript_tracking_code', '');
-    $page['footer']['islandora_piwik']['#markup'] = $tracking_code;
   }
+  $script.='});';
+    if (arg(0) != 'islandora' && arg(1) != 'object' && isset($page['footer'])) {
+      $tracking_code = variable_get('islandora_piwik_javascript_tracking_code', '');
+      $page['footer']['islandora_piwik']['#markup'] = $tracking_code;
+    }
   drupal_add_js($script, array('type' => 'inline', 'scope' => 'header', 'weight' => 50));
 }
 
