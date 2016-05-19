@@ -325,7 +325,6 @@ function islandora_piwik_get_site_id($islandora_object) {
 */
 function islandora_piwik_page_alter(&$page) {
   module_load_include('inc', 'islandora', 'includes/utilities');
-  dpm($page);
   global $_islandora_solr_queryclass;
   $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
   $script.='jQuery(document).ready(function () {var _paq = _paq || [];';
@@ -339,7 +338,7 @@ function islandora_piwik_page_alter(&$page) {
         $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $general_site_id;
       }
       //Check if we are using facets
-      $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? : array();
+      $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
       array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
       dpm($keywordlist);
       $keywords = implode(' | ', $keywordlist);
