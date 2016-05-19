@@ -125,7 +125,7 @@ function islandora_piwik_admin_settings() {
  * Implements hook_islandora_view_object().
  */
 function islandora_piwik_islandora_view_object($object) {
-   if (variable_get('islandora_piwik_site_id', false)) {
+   if (!variable_get('islandora_piwik_use_javascript', 0)) {
   
   $timeout = (int) variable_get('islandora_piwik_timeout', '2');
   $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
@@ -185,7 +185,7 @@ function islandora_piwik_islandora_view_object($object) {
  * Implements hook_islandora_solr_query_result().
  */
 function islandora_piwik_islandora_solr_query_result($result) {
-  if (variable_get('islandora_piwik_site_id', false)) {
+  if (!variable_get('islandora_piwik_use_javascript', 0)) {
     $timeout = (int) variable_get('islandora_piwik_timeout', '2');
     $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
     $site_id = variable_get('islandora_piwik_site_id', '1');
@@ -341,7 +341,7 @@ function islandora_piwik_page_alter(&$page) {
       $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
       array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
       dpm($keywordlist);
-      $keywords = urlencode(implode(' | ', $keywordlist));
+      $keywords = urlencode(stripslashes(implode(' ', $keywordlist)));
       $script.="_paq.push(['trackSiteSearch',
       \"{$keywords}\",
       \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
