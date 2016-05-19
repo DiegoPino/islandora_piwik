@@ -327,7 +327,7 @@ function islandora_piwik_page_alter(&$page) {
   module_load_include('inc', 'islandora', 'includes/utilities');
   global $_islandora_solr_queryclass;
   $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
-  $script.='jQuery(document).ready(function () {var _paq = _paq || [];';
+  $script.='var _paq = _paq || [];';
     //Asume this will be true for all Solr Searches
   if (!empty($_islandora_solr_queryclass)) {
       dpm($_islandora_solr_queryclass);
@@ -341,7 +341,7 @@ function islandora_piwik_page_alter(&$page) {
       $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
       array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
       dpm($keywordlist);
-      $keywords = implode(' | ', $keywordlist);
+      $keywords = urlencode(implode(' | ', $keywordlist));
       $script.="_paq.push(['trackSiteSearch',
       \"{$keywords}\",
       \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
@@ -353,10 +353,10 @@ function islandora_piwik_page_alter(&$page) {
         \"{$keywords}\",
         \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
         {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
-        ])";
+        ]);";
       }
   }
-  $script.='});';
+  $script.='';
     if (arg(0) != 'islandora' && arg(1) != 'object' && isset($page['footer'])) {
       $tracking_code = variable_get('islandora_piwik_javascript_tracking_code', '');
       $page['footer']['islandora_piwik']['#markup'] = $tracking_code;
