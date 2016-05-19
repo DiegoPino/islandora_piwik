@@ -70,6 +70,15 @@ function islandora_piwik_admin_settings() {
       (e.g., \"islandora:mycollection, 5\"). Multiple collections can be
       associated with the same site ID."),
   );
+  $form['islandora_piwik_use_javascript'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use Inline Javascript to track'),
+    '#default_value' => variable_get('islandora_piwik_use_javascript', 1),
+    '#description' => t("Check this option if you want to track sites using inline Javascript instead of PIWIK PHP httpd call.
+      If checked, this will automatically add inline PIWIK tracking Javascript to each drupal and Islandora page, needed
+      if you run a front end caching mechanism like Varnish or if you want to avoid the httpd call to PIWIK blocks or delays your page load
+      "),
+  );
   $form['islandora_piwik_timeout'] = array(
     '#title' => t('Timeout'),
     '#type' => 'textfield',
@@ -116,6 +125,8 @@ function islandora_piwik_admin_settings() {
  * Implements hook_islandora_view_object().
  */
 function islandora_piwik_islandora_view_object($object) {
+   if (variable_get('islandora_piwik_site_id', false)) {
+  
   $timeout = (int) variable_get('islandora_piwik_timeout', '2');
   $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
   $site_id = islandora_piwik_get_site_id($object);
@@ -166,6 +177,7 @@ function islandora_piwik_islandora_view_object($object) {
       }
     }
   }
+}
   return array();
 }
 
@@ -173,29 +185,31 @@ function islandora_piwik_islandora_view_object($object) {
  * Implements hook_islandora_solr_query_result().
  */
 function islandora_piwik_islandora_solr_query_result($result) {
-  $timeout = (int) variable_get('islandora_piwik_timeout', '2');
-  $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
-  $site_id = variable_get('islandora_piwik_site_id', '1');
-  global $base_url;
+  if (variable_get('islandora_piwik_site_id', false)) {
+    $timeout = (int) variable_get('islandora_piwik_timeout', '2');
+    $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
+    $site_id = variable_get('islandora_piwik_site_id', '1');
+    global $base_url;
 
-  $current_path = $base_url . '/' . current_path();
-  $query = '?apiv=1&rec=1';
-  $query .= '&idsite=' . $site_id;
-  $search_words = $result['responseHeader']['params']['q'];
-  $search_words = urlencode($search_words);
-  $query .= '&search=' . $search_words;
-  if ($result['response']['numFound'] === 0) {
-    $query .= '&search_count=0';
-  }
-  $query .= '&url=' . $current_path;
-  $uri = $endpoint . $query;
-  try {
-    $return = drupal_http_request($uri, array('timeout' => $timeout));
-  }
-  catch (Exception $e) {
-    watchdog('islandora_piwik', "Error connecting to Piwik server at %ep:
+    $current_path = $base_url . '/' . current_path();
+    $query = '?apiv=1&rec=1';
+    $query .= '&idsite=' . $site_id;
+    $search_words = $result['responseHeader']['params']['q'];
+    $search_words = urlencode($search_words);
+    $query .= '&search=' . $search_words;
+    if ($result['response']['numFound'] === 0) {
+      $query .= '&search_count=0';
+    }
+    $query .= '&url=' . $current_path;
+    $uri = $endpoint . $query;
+    try {
+      $return = drupal_http_request($uri, array('timeout' => $timeout));
+    }
+    catch (Exception $e) {
+      watchdog('islandora_piwik', "Error connecting to Piwik server at %ep:
       %message", array("%ep" => $endpoint, "%message" => $e->getMessage()),
       WATCHDOG_ERROR);
+    }
   }
 }
 
@@ -307,14 +321,48 @@ function islandora_piwik_get_site_id($islandora_object) {
 }
 
 /**
- * Implements hook_page_alter().
- */
+* Implements hook_page_alter().
+*/
 function islandora_piwik_page_alter(&$page) {
-  // Don't double count Islandora objects.
+
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  dpm($page);
+  global $_islandora_solr_queryclass;
+  $general_site_id = variable_get('islandora_piwik_site_id', '1');
+  $script.='jQuery(document).ready(function () {';
+    //Asume this will be true for all Solr Searches
+    if (!empty($_islandora_solr_queryclass)) {
+      dpm($_islandora_solr_queryclass);
+      // Means searching in a particular collection
+      // DGI never validated cp? Can be anything!
+      if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid('cp')) {
+        $object = islandora_load_object($_islandora_solr_queryclass->internalSolrParams['cp']);
+        $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $siteId;
+        //Check if we are using facets
+        $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? : array();
+        array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
+        $keywords = implode(' | ', $keywordlist);
+        $script.="_paq.push(['trackSiteSearch',
+        \"{$keywords}\",
+        \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
+        {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
+        ])";
+        if ($siteId != $general_site_id) {
+          $script.="_paq.push(['setSiteId',$siteId]);";
+          $script.="_paq.push(['trackSiteSearch',
+          \"{$keywords}\",
+          \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
+          {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
+          ])";
+        }
+      }
+    }
+    $script.='});';
   if (arg(0) != 'islandora' && arg(1) != 'object' && isset($page['footer'])) {
     $tracking_code = variable_get('islandora_piwik_javascript_tracking_code', '');
     $page['footer']['islandora_piwik']['#markup'] = $tracking_code;
   }
+  drupal_add_js($script, array('type' => 'inline', 'scope' => 'header', 'weight' => 50));
 }
 
 /**
