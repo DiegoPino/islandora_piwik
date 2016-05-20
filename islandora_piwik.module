@@ -295,6 +295,7 @@ function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
     try {
       $query_processor->executeQuery();
       $solr_results = $query_processor->islandoraSolrResult['response'];
+      dpm($solr_results);
     } catch (Exception $e) {
       drupal_set_message(t('error searching @message', array('@message' => $e->getMessage())), 'error');
     }
