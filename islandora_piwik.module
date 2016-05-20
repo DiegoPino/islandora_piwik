@@ -290,7 +290,7 @@ function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
     $query_processor = new IslandoraSolrQueryProcessor();
     $query = '*:*';
     $query_processor->buildQuery($query);
-    $query_processor->solrParams['fl'] = 'ancestors_ms';
+    $query_processor->solrParams['fl'] = 'PID, ancestors_ms';
     $query_processor->solrParams['fq'][] = 'PID:'."\"{$islandora_object->id}\"";
     try {
       $query_processor->executeQuery();
