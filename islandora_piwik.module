@@ -274,7 +274,36 @@ EOQ;
 }
 
 /**
- * Returns the Piwik site ID to use for the current object.
+ * Returns the PIDs via solr of all collections an Islandora object belongs to.
+ *
+ * @param object $islandora_object
+ *   The Islandora object being inspected.
+ *
+ * @return array $collection_pids
+ *   A list of PIDS.
+ */
+function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
+  $collection_pids = array();
+  // islandora:is_member_of_collection property.
+  if ($islandora_object) {
+    global $user;
+    $query_processor = new IslandoraSolrQueryProcessor();
+    $query = '*:*';
+    $query_processor->buildQuery($query);
+    $query_processor->solrParams['fl'] = 'ancestors_ms';
+    $query_processor->solrParams['fq'][] = 'PID:'."\"{$islandora_object->id}\"";
+    try {
+      $query_processor->executeQuery();
+      $solr_results = $query_processor->islandoraSolrResult['response'];
+    } catch (Exception $e) {
+      drupal_set_message(t('error searching @message', array('@message' => $e->getMessage())), 'error');
+    }
+    dpm($query_processor);
+  }
+}
+
+/**
+ * Returns the Piwik site ID to use for the current object using.
  *
  * @param object $islandora_object
  *   The Islandora object being inspected.
@@ -356,6 +385,14 @@ function islandora_piwik_page_alter(&$page) {
         ]);";
       }
   }
+  else {
+    if ((arg(0) == 'islandora') && (arg(1) == 'object')) {
+      $object = menu_get_object('islandora_object', 2);
+      if ($object) {
+        islandora_piwik_get_ancestorviasolr_collections($object);
+      }  
+    }
+  }  
   $script.='';
     if (arg(0) != 'islandora' && arg(1) != 'object' && isset($page['footer'])) {
       $tracking_code = variable_get('islandora_piwik_javascript_tracking_code', '');
