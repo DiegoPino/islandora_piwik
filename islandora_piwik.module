@@ -292,7 +292,7 @@ function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
     $query = '*:*';
     $query_processor->buildQuery($query);
     //Todo make this solr field configurable
-    $query_processor->solrParams['fl'] = 'ancestors_ms';
+    $query_processor->solrParams['fl'] = 'PID, ancestors_ms';
     $query_processor->solrParams['fq'][] = 'PID:'."\"{$islandora_object->id}\"";
     try {
       $query_processor->executeQuery(FALSE);
@@ -389,7 +389,7 @@ function islandora_piwik_page_alter(&$page) {
   module_load_include('inc', 'islandora', 'includes/utilities');
   global $_islandora_solr_queryclass;
   $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
-  $script.='var _paq = _paq || [];';
+  $script = 'var _paq = _paq || [];';
     //Asume this will be true for all Solr Searches
   if (!empty($_islandora_solr_queryclass)) {
       // Means searching in a particular collection
@@ -417,6 +417,8 @@ function islandora_piwik_page_alter(&$page) {
       }
   }
   else {
+    $timeout = (int) variable_get('islandora_piwik_timeout', '0.5');
+    $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
     if ((arg(0) == 'islandora') && (arg(1) == 'object')) {
       $object = menu_get_object('islandora_object', 2);
       $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $general_site_id;
