@@ -283,6 +283,7 @@ EOQ;
  *   A list of PIDS.
  */
 function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
+  module_load_include('inc', 'islandora_solr', 'query_processor');
   $collection_pids = array();
   // islandora:is_member_of_collection property.
   if ($islandora_object) {
@@ -293,7 +294,7 @@ function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
     $query_processor->solrParams['fl'] = 'PID, ancestors_ms';
     $query_processor->solrParams['fq'][] = 'PID:'."\"{$islandora_object->id}\"";
     try {
-      $query_processor->executeQuery();
+      $query_processor->executeQuery(FALSE);
       $solr_results = $query_processor->islandoraSolrResult['response'];
       dpm($solr_results);
     } catch (Exception $e) {
