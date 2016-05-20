@@ -291,17 +291,20 @@ function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
     $query_processor = new IslandoraSolrQueryProcessor();
     $query = '*:*';
     $query_processor->buildQuery($query);
-    $query_processor->solrParams['fl'] = 'PID, ancestors_ms';
+    //Todo make this solr field configurable
+    $query_processor->solrParams['fl'] = 'ancestors_ms';
     $query_processor->solrParams['fq'][] = 'PID:'."\"{$islandora_object->id}\"";
     try {
       $query_processor->executeQuery(FALSE);
       $solr_results = $query_processor->islandoraSolrResult['response'];
-      dpm($solr_results);
+      if ($solr_results['numFound'] == 1) {
+         $collection_pids = (array)$solr_results['objects'][0]['solr_doc']['ancestors_ms'];
+      }
     } catch (Exception $e) {
-      drupal_set_message(t('error searching @message', array('@message' => $e->getMessage())), 'error');
+      watchdog(t('Islandora PIWIK fetch Solr ancestors Error', nl2br(check_plain($e->getMessage()))), NULL, WATCHDOG_WARNING);
     }
-    dpm($query_processor);
   }
+  return $collection_pids;
 }
 
 /**
@@ -336,18 +339,46 @@ function islandora_piwik_get_site_id($islandora_object) {
   if (array_key_exists($islandora_object->id, $collection_ids)) {
     return $collection_ids[$islandora_object->id];
   }
-  // Get the collection PIDs of the current object, and test whether
-  // any of them are registered to use a collection site ID. If the
-  // object is a member of multiple collections, use the first one
-  // encountered.
-  $in_collections = islandora_piwik_get_ancestor_collections($islandora_object);
-  foreach ($in_collections as $in_collection) {
-    if (array_key_exists($in_collection, $collection_ids)) {
-      return $collection_ids[$in_collection];
+  else {
+    return $general_site_id;
+  }
+}
+
+
+/**
+ * Returns the Piwik site ID to use for the current object using.
+ *
+ * @param object $islandora_object
+ *   The Islandora object being inspected.
+ *
+ * @return string $site_id
+ *   The site ID to use.
+ */
+function islandora_piwik_get_site_id_bypid($pid) {
+  $general_site_id = variable_get('islandora_piwik_site_id', '1');
+  $collection_site_ids_setting = variable_get('islandora_piwik_collection_site_ids', '');
+  // If there are no collection-specific site IDs, use the general one.
+  if (!strlen($collection_site_ids_setting)) {
+    return $general_site_id;
+  }
+  else {
+    $collection_ids = array();
+    $entries = preg_split('/\r\n|[\r\n]/', $collection_site_ids_setting);
+    foreach ($entries as &$entry) {
+      list($pid, $site_id) = explode(',', $entry);
+      $pid = trim($pid);
+      $collection_ids[$pid] = trim($site_id);
     }
-    else {
-      return $general_site_id;
-    }
+  }
+
+  // If the object is a collection object, its PID might be in the
+  // list of collection-specific site IDs. Test this first since
+  // doing so is less expensive then the following operation.
+  if (array_key_exists($pid, $collection_ids)) {
+    return $collection_ids[$pid];
+  }
+  else {
+    return $general_site_id;
   }
 }
 
@@ -361,17 +392,15 @@ function islandora_piwik_page_alter(&$page) {
   $script.='var _paq = _paq || [];';
     //Asume this will be true for all Solr Searches
   if (!empty($_islandora_solr_queryclass)) {
-      dpm($_islandora_solr_queryclass);
       // Means searching in a particular collection
       // DGI never validated cp? Can be anything!
       if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid('cp')) {
         $object = islandora_load_object($_islandora_solr_queryclass->internalSolrParams['cp']);
-        $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $general_site_id;
+        $siteId = is_object($object) ? islandora_piwik_get_site_id_bypid($object->id) : $general_site_id;
       }
       //Check if we are using facets
       $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
       array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
-      dpm($keywordlist);
       $keywords = urlencode(stripslashes(implode(' ', $keywordlist)));
       $script.="_paq.push(['trackSiteSearch',
       \"{$keywords}\",
@@ -390,8 +419,37 @@ function islandora_piwik_page_alter(&$page) {
   else {
     if ((arg(0) == 'islandora') && (arg(1) == 'object')) {
       $object = menu_get_object('islandora_object', 2);
-      if ($object) {
-        islandora_piwik_get_ancestorviasolr_collections($object);
+      $siteId = is_object($object) ? islandora_piwik_get_site_id($object) : $general_site_id;
+     if ($object) {
+        // Record usage of the object's collection(s).
+        if (variable_get('islandora_piwik_track_collection_usage', 1)) {
+          $collections = islandora_piwik_get_ancestorviasolr_collections($object);
+          foreach ($collections as $collection) {
+            // We don't want to count usage of the islandora:root collection.
+            if ($collection != 'islandora:root') {
+              $siteId2 = is_object($object) ? islandora_piwik_get_site_id_bypid($collection) : $general_site_id;
+              $query = '?apiv=1&rec=1';
+              $query .= '&idsite=' . $site_id;
+              // Create the JSON object that holds the custom Piwik variable that
+              // tracks the collection PID. We do not include the collection URL
+              // in our request to the Piwik API since doing so would double-count
+              // usage of the collection.
+              $cvar_object = new stdClass();
+              $cvar_object->{1} = array('collection_pid', $collection);
+              $query .= '&cvar=' . urlencode(json_encode($cvar_object));
+              $uri = $endpoint . $query;
+              try {
+                $return = drupal_http_request($uri, array('timeout' => $timeout));
+              }
+              catch (Exception $e) {
+                watchdog('islandora_piwik', "Error connecting to Piwik server at %ep:
+                  %message", array("%ep" => $endpoint, "%message" => $e->getMessage()),
+                  WATCHDOG_ERROR);
+              }
+            }
+          }
+        }
+        
       }  
     }
   }  
