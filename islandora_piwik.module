@@ -455,7 +455,7 @@ function islandora_piwik_page_alter(&$page) {
                foreach($collectionpid_unique as $collectionpid) {
                  $script .=  "piwikTracker{$siteId}.setCustomDimension(1, '{$collectionpid}');";
                }
-               $script .=  "piwikTracker{$siteId}.trackPageView();"
+               $script .=  "piwikTracker{$siteId}.trackPageView();";
           }
           $script .= '} catch( err ) {}}';
         }
