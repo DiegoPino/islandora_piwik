@@ -429,7 +429,7 @@ function islandora_piwik_page_alter(&$page) {
     if ((arg(0) == 'islandora') && (arg(1) == 'object')) {
       $object = menu_get_object('islandora_object', 2);
       if ($object) {
-        $siteIds = islandora_piwik_get_site_ids_bypid($object->pid);
+        $siteIds = islandora_piwik_get_site_ids_bypid($object->id);
         // Record usage of the object's collection(s).
         if (variable_get('islandora_piwik_track_collection_usage', 1)) {
           $collections = islandora_piwik_get_ancestorviasolr_collections($object);
