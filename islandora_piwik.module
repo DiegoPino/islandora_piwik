@@ -449,7 +449,7 @@ function islandora_piwik_page_alter(&$page) {
           'type' => 'inline',
           'scope' => 'header',
           'weight' => 50,
-        ) 
+        )
       }
     }
   }
