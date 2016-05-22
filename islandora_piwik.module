@@ -457,7 +457,7 @@ function islandora_piwik_page_alter(&$page) {
                }
                $script .=  "piwikTracker{$siteId}.trackPageView();";
           }
-          $script .= '} catch( err ) {}}';
+          $script .= '} catch( err ) {console.log(err);}}';
         }
         drupal_add_js($script,
         array(
