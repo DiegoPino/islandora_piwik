@@ -453,8 +453,9 @@ function islandora_piwik_page_alter(&$page) {
                $script .= "var piwikTracker{$siteId} = Piwik.getTracker('{$endpoint}', {$siteId});";
                $collectionpid_unique = array_unique($collectionpids);
                foreach($collectionpid_unique as $collectionpid) {
-               $script .=  "piwikTracker{$siteId}.setCustomDimension(1, '{$collectionpid}');";
+                 $script .=  "piwikTracker{$siteId}.setCustomDimension(1, '{$collectionpid}');";
                }
+               $script .=  "piwikTracker{$siteId}.trackPageView();"
           }
           $script .= '} catch( err ) {}}';
         }
