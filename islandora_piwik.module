@@ -450,6 +450,7 @@ function islandora_piwik_page_alter(&$page) {
           'scope' => 'header',
           'weight' => 50,
         )
+        );
       }
     }
   }
