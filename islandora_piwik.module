@@ -405,7 +405,7 @@ function islandora_piwik_page_alter(&$page) {
     $script .= "_paq.push(['trackSiteSearch',
     \"{$keywords}\",
     \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
-     {$_islandora_solr_queryclass->islandoraSolrResult['numFound']}
+     {$_islandora_solr_queryclass->islandoraSolrResult['response']['numFound']}
     ])";
     if ($siteId != $general_site_id) {
       $script .= "_paq.push(['setSiteId',$siteId]);";
