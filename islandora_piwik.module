@@ -448,7 +448,6 @@ function islandora_piwik_page_alter(&$page) {
             }
           }
           $script .= 'window.piwikAsyncInit = function () { try {';
-          dpm($idtocollectionmapping);
           foreach($idtocollectionmapping as $siteId => $collectionpids) {
                $script .= "var piwikTracker{$siteId} = Piwik.getTracker('{$endpoint}', {$siteId});";
                $collectionpid_unique = array_unique($collectionpids);
