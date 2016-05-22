@@ -424,25 +424,39 @@ function islandora_piwik_page_alter(&$page) {
     );
   }
   else {
-    $timeout = (int) variable_get('islandora_piwik_timeout', '0.5');
     $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
     if ((arg(0) == 'islandora') && (arg(1) == 'object')) {
       $object = menu_get_object('islandora_object', 2);
       if ($object) {
-        $siteIds = islandora_piwik_get_site_ids_bypid($object->id);
+        $collections = array();
+        $idtocollectionmapping = array();
         // Record usage of the object's collection(s).
+        // Check first if the visited object is a collection,
+        // because it may not be in the list of ancestors
+        if (in_array('islandora:collectionCModel', $object->models)) {
+           $collections[]=$object->id;
+        }
         if (variable_get('islandora_piwik_track_collection_usage', 1)) {
-          $collections = islandora_piwik_get_ancestorviasolr_collections($object);
+          $collections += islandora_piwik_get_ancestorviasolr_collections($object);
           foreach ($collections as $collection) {
             // We don't want to count usage of the islandora:root collection.
             if ($collection != 'islandora:root') {
-              $siteIds2 = islandora_piwik_get_site_ids_bypid($collection);
-              foreach ($siteIds2 as $siteId2) {
-                $script .= "_paq.push(['setSiteId', $siteId2]);";
-                $script .= "_paq.push(['setCustomVariable', 1, 'Islandora Collection', '{$collection}', 'page']);";
+            $siteIds2 = islandora_piwik_get_site_ids_bypid($collection);
+            foreach ($siteIds2 as $siteId2) {
+              $idtocollectionmapping[$siteId2][] = $collection;
               }
             }
           }
+          $script .= 'window.piwikAsyncInit = function () { try {';
+          dpm($idtocollectionmapping);
+          foreach($idtocollectionmapping as $siteId => $collectionpids) {
+               $script .= "var piwikTracker{$siteId} = Piwik.getTracker('{$endpoint}', {$siteId});";
+               $collectionpid_unique = array_unique($collectionpid);
+               foreach($collectionpid_unique as $collectionpid) {
+               $script .=  "piwikTracker{$siteId}.setCustomDimension(1, $collectionpid);";
+               }
+          }
+          $script .= '} catch( err ) {}}';
         }
         drupal_add_js($script,
         array(
