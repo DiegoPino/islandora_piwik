@@ -394,9 +394,10 @@ function islandora_piwik_page_alter(&$page) {
   if (!empty($_islandora_solr_queryclass)) {
     // Means searching in a particular collection
     // DGI never validated cp? Can be anything!
+    dpm($_islandora_solr_queryclass);
     if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid('cp')) {
       $object = islandora_load_object($_islandora_solr_queryclass->internalSolrParams['cp']);
-      $siteId = is_object($object) ? islandora_piwik_get_site_id_bypid($object->id) : $general_site_id;
+      $siteId = is_object($object) ? islandora_piwik_get_site_ids_bypid($object->id) : $general_site_id;
     }
     // Check if we are using facets.
     $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
