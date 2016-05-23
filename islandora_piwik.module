@@ -392,7 +392,7 @@ function islandora_piwik_page_alter(&$page) {
   $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
   $script = 'var _paq = _paq || [];';
   $siteIds = array();
-  $script = $script2 = '';
+  $script2 = '';
   $inOtherIds = false;
   // Asume this will be true for all Solr Search pages.
   if (!empty($_islandora_solr_queryclass)) {
