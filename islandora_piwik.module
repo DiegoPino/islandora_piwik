@@ -388,33 +388,42 @@ function islandora_piwik_get_site_ids_bypid($pid) {
 function islandora_piwik_page_alter(&$page) {
   module_load_include('inc', 'islandora', 'includes/utilities');
   global $_islandora_solr_queryclass;
+  $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
   $general_site_id = $siteId = variable_get('islandora_piwik_site_id', '1');
   $script = 'var _paq = _paq || [];';
+  $siteIds = array();
+  $script = $script2 = '';
+  $inOtherIds = false;
   // Asume this will be true for all Solr Search pages.
   if (!empty($_islandora_solr_queryclass)) {
-    // Means searching in a particular collection
+    // Searching in a particular collection?
     // DGI never validated cp? Can be anything!
-    dpm($_islandora_solr_queryclass);
-    if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid('cp')) {
+    if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid($_islandora_solr_queryclass->internalSolrParams['cp'])) {
       $object = islandora_load_object($_islandora_solr_queryclass->internalSolrParams['cp']);
-      $siteId = is_object($object) ? islandora_piwik_get_site_ids_bypid($object->id) : $general_site_id;
+      $siteIds = is_object($object) ? islandora_piwik_get_site_ids_bypid($object->id) : array($general_site_id);
     }
     // Check if we are using facets.
     $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
-    array_unshift($keywordlist, $_islandora_solr_queryclass->internalSolrQuery);
+    array_unshift($keywordlist, $_islandora_solr_queryclass->solrQuery);
     $keywords = urlencode(stripslashes(implode(' ', $keywordlist)));
     $script .= "_paq.push(['trackSiteSearch',
     \"{$keywords}\",
     \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
      {$_islandora_solr_queryclass->islandoraSolrResult['response']['numFound']}
-    ])";
-    if ($siteId != $general_site_id) {
-      $script .= "_paq.push(['setSiteId',$siteId]);";
-      $script .= "_paq.push(['trackSiteSearch',
-      \"{$keywords}\",
-      \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
-      {$_islandora_solr_queryclass->islandoraSolrResult['response']['numFound']}
-      ]);";
+    ]);";
+    foreach($siteIds as $siteId) {
+      if ($siteId != $general_site_id) {
+        $inOtherIds = true;
+        $script2 .= "var piwikTracker{$siteId} = Piwik.getTracker('{$endpoint}', {$siteId});";
+        $script2 .=  "piwikTracker{$siteId}.trackSiteSearch(\"{$keywords}\",
+        \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
+        {$_islandora_solr_queryclass->islandoraSolrResult['response']['numFound']});";
+      }
+    }
+    if ($inOtherIds) {
+      $script .= 'window.piwikAsyncInit = function () { try {';
+      $script .=  $script2;
+      $script .= '} catch( err ) {console.log(err);}};';
     }
     drupal_add_js($script,
     array(
@@ -425,7 +434,6 @@ function islandora_piwik_page_alter(&$page) {
     );
   }
   else {
-    $endpoint = variable_get('islandora_piwik_endpoint', 'http://piwik.example.com/piwik.php');
     if ((arg(0) == 'islandora') && (arg(1) == 'object')) {
       $object = menu_get_object('islandora_object', 2);
       if ($object) {
