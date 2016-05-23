@@ -399,7 +399,7 @@ function islandora_piwik_page_alter(&$page) {
     // Searching in a particular collection?
     // DGI never validated cp? Can be anything!
     if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid($_islandora_solr_queryclass->internalSolrParams['cp'])) {
-      $object = islandora_load_object($_islandora_solr_queryclass->internalSolrParams['cp']);
+      $object = islandora_object_load($_islandora_solr_queryclass->internalSolrParams['cp']);
       $siteIds = is_object($object) ? islandora_piwik_get_site_ids_bypid($object->id) : array($general_site_id);
     }
     // Check if we are using facets.
