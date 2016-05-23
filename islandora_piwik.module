@@ -297,7 +297,9 @@ function islandora_piwik_get_ancestorviasolr_collections($islandora_object) {
       $query_processor->executeQuery(FALSE);
       $solr_results = $query_processor->islandoraSolrResult['response'];
       if ($solr_results['numFound'] == 1) {
-        $collection_pids = (array) $solr_results['objects'][0]['solr_doc']['ancestors_ms'];
+        if (isset($solr_results['objects'][0]['solr_doc']['ancestors_ms'])) {
+          $collection_pids = (array) $solr_results['objects'][0]['solr_doc']['ancestors_ms'];
+        }
       }
     }
     catch (Exception $e) {
