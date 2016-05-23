@@ -405,10 +405,11 @@ function islandora_piwik_page_alter(&$page) {
     // Check if we are using facets.
     $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
     array_unshift($keywordlist, $_islandora_solr_queryclass->solrQuery);
+    $searchtype = isset($_islandora_solr_queryclass->internalSolrParams['type']) ? $_islandora_solr_queryclass->internalSolrParams['type'] : 'advanced';
     $keywords = urlencode(stripslashes(implode(' ', $keywordlist)));
     $script .= "_paq.push(['trackSiteSearch',
     \"{$keywords}\",
-    \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
+    \"{$searchtype}\",
      {$_islandora_solr_queryclass->islandoraSolrResult['response']['numFound']}
     ]);";
     foreach($siteIds as $siteId) {
@@ -416,7 +417,7 @@ function islandora_piwik_page_alter(&$page) {
         $inOtherIds = true;
         $script2 .= "var piwikTracker{$siteId} = Piwik.getTracker('{$endpoint}', {$siteId});";
         $script2 .=  "piwikTracker{$siteId}.trackSiteSearch(\"{$keywords}\",
-        \"{$_islandora_solr_queryclass->internalSolrParams['type']}\",
+        \"{$searchtype}\",
         {$_islandora_solr_queryclass->islandoraSolrResult['response']['numFound']});";
       }
     }
