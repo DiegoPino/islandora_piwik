@@ -377,6 +377,10 @@ function islandora_piwik_get_site_ids_bypid($pid) {
   // list of collection-specific site IDs. Test this first since
   // doing so is less expensive then the following operation.
   if (count($collection_ids) > 0) {
+    //Add also the default one to keep general track
+    $collection_ids[] = $general_site_id;
+    //In case of duplicates, remove
+    $collection_ids = array_unique($collection_ids);
     return $collection_ids;
   }
   else {
@@ -453,9 +457,9 @@ function islandora_piwik_page_alter(&$page) {
           foreach ($collections as $collection) {
             // We don't want to count usage of the islandora:root collection.
             if ($collection != 'islandora:root') {
-            $siteIds2 = islandora_piwik_get_site_ids_bypid($collection);
-            foreach ($siteIds2 as $siteId2) {
-              $idtocollectionmapping[$siteId2][] = $collection;
+              $siteIds2 = islandora_piwik_get_site_ids_bypid($collection);
+              foreach ($siteIds2 as $siteId2) {
+                $idtocollectionmapping[$siteId2][] = $collection;
               }
             }
           }
@@ -463,6 +467,7 @@ function islandora_piwik_page_alter(&$page) {
           foreach($idtocollectionmapping as $siteId => $collectionpids) {
                $script .= "var piwikTracker{$siteId} = Piwik.getTracker('{$endpoint}', {$siteId});";
                $collectionpid_unique = array_unique($collectionpids);
+               $script .=  "piwikTracker{$siteId}.setCustomDimension(2, '{$object->id}');";
                foreach($collectionpid_unique as $collectionpid) {
                  $collectionpidURL = urlencode($collectionpid);
                  $script .=  "piwikTracker{$siteId}.setCustomDimension(1, '{$collectionpidURL}');";
