@@ -456,7 +456,7 @@ function islandora_piwik_page_alter(&$page) {
           $collections += islandora_piwik_get_ancestorviasolr_collections($object);
           foreach ($collections as $collection) {
             // We don't want to count usage of the islandora:root collection.
-            if ($collection != 'islandora:root') {
+            if (($collection != 'islandora:root') && ($collection != 'islandora:featured_collection')) {
               $siteIds2 = islandora_piwik_get_site_ids_bypid($collection);
               foreach ($siteIds2 as $siteId2) {
                 $idtocollectionmapping[$siteId2][] = $collection;
