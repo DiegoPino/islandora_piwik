@@ -412,6 +412,9 @@ function islandora_piwik_page_alter(&$page) {
     $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
     array_unshift($keywordlist, $_islandora_solr_queryclass->solrQuery);
     $searchtype = isset($_islandora_solr_queryclass->internalSolrParams['type']) ? $_islandora_solr_queryclass->internalSolrParams['type'] : 'advanced';
+    if ($searchtype == 'edismax' || $searchtype == 'dismax') {
+      $searchtype = "simple";
+    }
     $keywords = urlencode(stripslashes(implode(' ', $keywordlist)));
     $script .= "_paq.push(['trackSiteSearch',
     \"{$keywords}\",
