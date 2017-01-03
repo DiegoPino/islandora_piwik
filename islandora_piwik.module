@@ -410,7 +410,7 @@ function islandora_piwik_page_alter(&$page) {
       $siteIds = is_object($object) ? islandora_piwik_get_site_ids_bypid($object->id) : array($general_site_id);
     }
     // Check if we are using facets.
-    $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? $_islandora_solr_queryclass->internalSolrParams['f'] : array();
+    $keywordlist = isset($_islandora_solr_queryclass->internalSolrParams['f']) ? (array) $_islandora_solr_queryclass->internalSolrParams['f'] : array();
     array_unshift($keywordlist, $_islandora_solr_queryclass->solrQuery);
     if (isset($collectionsearch)) {
       array_unshift($keywordlist, $collectionsearch);
