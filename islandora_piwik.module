@@ -403,7 +403,7 @@ function islandora_piwik_page_alter(&$page) {
   // Asume this will be true for all Solr Search pages.
   if (!empty($_islandora_solr_queryclass)) {
     // Searching in a particular collection?
-    // DGI never validated cp? Can be anything!
+    // Cp? Could be anything since it is user provided data.
     if (isset($_islandora_solr_queryclass->internalSolrParams['cp']) && islandora_is_valid_pid($_islandora_solr_queryclass->internalSolrParams['cp'])) {
       $object = islandora_object_load($_islandora_solr_queryclass->internalSolrParams['cp']);
       $collectionsearch = $_islandora_solr_queryclass->internalSolrParams['cp'];
