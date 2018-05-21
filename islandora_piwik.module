@@ -237,7 +237,9 @@ function islandora_piwik_get_ancestor_collections($islandora_object) {
 EOQ;
         $connection = islandora_get_tuque_connection();
         $results = $connection->repository->ri->sparqlQuery($query, 1);
-        $collection_pids[] = $results[0]['collection']['value'];
+        if (count($results)) {
+          $collection_pids[] = $results[0]['collection']['value'];
+        }
       }
       // If the object is a newspaper page, query the RI to get the
       // its ancestor collection.
@@ -252,7 +254,9 @@ EOQ;
 EOQ;
         $connection = islandora_get_tuque_connection();
         $results = $connection->repository->ri->sparqlQuery($query, 1);
-        $collection_pids[] = $results[0]['collection']['value'];
+        if (count($results)) {
+          $collection_pids[] = $results[0]['collection']['value'];
+        }
       }
     }
     return $collection_pids;
