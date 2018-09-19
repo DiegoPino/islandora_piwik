@@ -2,7 +2,7 @@
 
 ## Overview
 
-This module provides integration with the [Piwik Open Analytics Platform](http://piwik.org/) via the Piwik Tracking HTTP API. It does not embed Javascript in pages unless configured to do so.
+This module provides integration with the [Piwik Open Analytics Platform](http://piwik.org/) via the Piwik Tracking HTTP API and also the Javascript library to allow Asynchronous/parallel tracking of current page load.
 
 Islandora Piwik tracks object usage and (optionally) collection usage. Object usage is straight foward: each time a user views an object at /islandora/object/pid, the request for that URL is recorded by Piwik.
 
@@ -20,18 +20,18 @@ The contrib [Piwik Reports](https://www.drupal.org/project/piwik_reports) works 
 
 ## Collection-specific site IDs
 
-This module allows administrators to associate a collection PID with a Piwik site ID, allowing analytics to be broken out by collection. This feature is intended to allows site owners to view reports on their own collections, although the details of how to provide access to the relevant reports are [still in development](https://github.com/mjordan/islandora_piwik/issues/8). Collection and object page visits are recorded using only the collection-specific site ID, not both it and the general site ID. Currently, only collection and object page visits are recorded for collections using this feature; site searches are not. Multiple collections can be associated with the same site ID.
+This module allows administrators to associate a collection PID with a Piwik site ID, allowing analytics to be broken out by collection and you can also then assign multiple collections to a Virtual Viewer Segment. This feature is intended to allows site owners to view reports on their own collections. Collection and object page visits are recorded using only the collection-specific site ID, not both it and the general site ID. Site search and assets interaction (download, etc) tracking was also added.
 
 If a collection is not associated with a site ID, page visits for it or its child collections use the general site ID. Reports don't work for collection-specific site IDs, only the general site ID.
 
-## Tracking usage of an entire Islandora site
+## Tracking usage of an entire Drupal (Islandora) site
 
 If you want to use this module to provide analytics for your entire Islandora site, you can configure it to inject the JavaScript Tracking Code provided by Piwik into all non-Islandora-object pages. This feature is not intended to replace the contrib [Piwik Web Analytics](https://www.drupal.org/project/piwik) module, however. 
 
 ## Dependencies
 
 * Islandora
-* A Piwik server
+* [A Matomo server](https://matomo.org)
 
 ## Configuration
 
@@ -39,8 +39,9 @@ Visit admin/islandora/tools/piwik to configure this module. There is no set up o
 
 ## Maintainer
 
-* [Mark Jordan](https://github.com/mjordan)
+
+* [Diego Pino at Metro.org](https://github.com/DiegoPino)
 
 ## Feature requests
 
-This module was written as part of a large migration to Islandora from another repository platform that provided collection-level usage data (hence the focus on collections in this module). That said, I'd like to make the module as useful to as many implementers as possible. Given the rich functionality of the contrib [Piwik Web Analytics](https://www.drupal.org/project/piwik) module, the goal of this module is to add functionality specific to Islandora installations. While I am open to all feature requests from the community, I reserve the right to preface my response to a request with "That isn't really in scope for this module....".
+This module was written originally by [Mark Jordan](https://github.com/mjordan) as part of a large migration to Islandora from another repository platform that provided collection-level usage data (hence the focus on collections in this module). Usage of existing Solr information to avoid page load lag and Matomo JS API was added by Metro.org
